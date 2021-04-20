@@ -21,7 +21,7 @@ def download_signor_pathways():
         tar.extractall(path=locations.LOCAL_DATA_HOME)
     os.remove(pathways_tarball_location)
     # Change folder name to that listed in
-    # causal_precedence_training.locations
+    # causal_precedence_training.locations (defensive programming)
     shutil.move(os.path.join(locations.LOCAL_DATA_HOME,
                              'SIGNOR_pathways'),
-                locations.SIGNOR_PATHWAYS)
+                locations.SIGNOR_PATHWAYS_DIRECTORY)
