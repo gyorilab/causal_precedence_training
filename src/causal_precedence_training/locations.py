@@ -12,3 +12,5 @@ SIGNOR_PATHWAYS_DIRECTORY = pystow.join('causal_precedence_training',
 # Path to triples used as input to generate causal precedence datasets
 TRIPLES_DIRECTORY = pystow.join('causal_precedence_training',
                                 'causal_triples')
+TRAINING_DATA_EXPORT_DIRECTORY = pystow.join('causal_precedence_training',
+                                             'training_data')

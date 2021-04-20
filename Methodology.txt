@@ -1,0 +1,65 @@
+Methodology:
+
+1. Triples A->B->C were identified in the SIGNOR database
+   (https://signor.uniroma2.it) such that the links A->B and B->C both occur at
+   least once in the same pathway. Edge types were limited to activations and
+   inhibitions. SIGNOR complexes and families were mapped to Famplex when such
+   mappings exist. For complexes without Famplex mappings, triples were expanded
+   out.  For example the Integrin Signaling pathway in SIGNOR contains the edges
+   "A6/B4 integrin" up-regulates activity of "PI3K complex" and "PI3K complex"
+   up-regulates activity of "AKT protein family". PI3K complex and AKT protein
+   family each has a mapping to Famplex, but no mapping exists for A6/B4
+   integrin. The associated triples are then HGNC:ITA6 -> FPLX:PI3K -> FPLX:AKT
+   HTNC:ITB4 -> FPLX:PI3K -> FPLX:AKT
+
+
+2. For each triple A->B->C extracted from SIGNOR by the above procedure, INDRA
+   statements are found in the INDRA database for which the links A -> B and B
+   -> C have support from REACH extractions taken from the same paper in the
+   same reading. Edges are restricted to be directed, (no complexes are
+   considered) but polarities are not required to match those in the associated
+   SIGNOR triple.  The entities A, B, and C are those after INDRA's grounding
+   mapping and word sense disambiguation have been applied and thus may not
+   match those in the supporting REACH extractions. Results are further filtered
+   to cases where the links A -> B and B -> C have support either from the same
+   sentence in the paper, or in neighboring sentences where the sentence
+   supporting A -> B occurs before that supporting B -> C.
+
+Description of contents:
+
+The file signor_triple_dataset.csv contains the columns "agent1_name", "agent1",
+"agent2_name", "agent2", "agent3_name", "agent3", "signor_stmt_type1",
+"signor_stmt_type2", "reach_stmt_type1", "reach_stmt_type2", "sentence_text1",
+"sentence_text2", "sentence_id1", "sentence_id2", "reading_id".
+
+
+"agent{i}_name" contains a canonical name for the ith agent in a triplet
+(e.g. GSK3B) and "agent{i} contains a standardized namespace and identifier
+for the same agent in the form of a curie "{namespace}:{identifier}"
+(e.g. "HGNC:4617".)
+
+"signor_stmt_type1", and "signor_stmt_type2" contain edge types for the
+associated SIGNOR statements supporting a triplet (either Activation or
+Inhibition).
+
+"reach_stmt_type1" and "reach_stmt_type2" contain the edge
+types for the REACH extractions supporting the triplet (extractions from
+the same sentence or neighboring sentences in the same paper with the
+sentence for A -> B preceding that for B -> C).
+
+"sentence_text1" and "sentence_text2" contain the respective sentences
+where the extractions supporting A -> B and B -> C were made. In most cases
+these are identical, but in some cases they are neighboring sentences
+from a paper.
+
+"sentence_id1" and "sentence_id2" contain the respective sentence-ids for
+the sentences as labeled in the REACH json output.
+
+"reading_id" is a key that maps to corresponding REACH output jsons. REACH
+output jsons are stored in a tar.gz archive
+signor_triple_dataset_reach_output.tar.gz.
+
+Filenames for the output jsons
+are of the form "{reading_id}.json" and can be matched up with the results
+in signor_triple_dataset.csv through the "reading_id" column.
+
