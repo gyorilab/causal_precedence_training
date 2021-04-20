@@ -1,16 +1,15 @@
-"""Functions for downloading datafiles
-"""
+"""Functions for downloading datafiles."""
 
 import os
-import boto3
 import shutil
 import tarfile
-import causal_precedence_training.locations as locations
+
+import boto3
+from causal_precedence_training import locations
 
 
 def download_signor_pathways():
-    """Download SIGNOR pathways into data directory
-    """
+    """Download SIGNOR pathways into data directory."""
     client = boto3.client('s3')
     pathways_tarball_location = os.path.join(locations.LOCAL_DATA_HOME,
                                              'SIGNOR_pathways.tar.gz')
