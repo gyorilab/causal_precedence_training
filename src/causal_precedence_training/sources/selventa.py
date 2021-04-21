@@ -1,25 +1,29 @@
 # -*- coding: utf-8 -*-
 
-"""Get transitive relations from the Selventa BEL content."""
+"""Get transitive relations from the Selventa BEL content.
+
+Run with ``python -m causal_precedence_training.sources.selventa``.
+"""
+
+import logging
+import os
+from typing import Tuple, Union
 
 import bioregistry
 import click
-import logging
 import pandas as pd
-import pyobo
-from more_click import verbose_option
-from pyobo.xrefdb.sources.famplex import _get_famplex_df
-from tqdm.autonotebook import tqdm
-from typing import Tuple, Union
-
 import pybel
 import pybel.constants as pc
+import pyobo
 import pystow
+from more_click import verbose_option
 from pybel.dsl import BaseConcept
+from pyobo.xrefdb.sources.famplex import _get_famplex_df
+from tqdm.autonotebook import tqdm
+
+from causal_precedence_training.resources import HERE
 
 logger = logging.getLogger(__name__)
-
-URL = 'https://github.com/cthoyt/selventa-knowledge/raw/master/selventa_knowledge/large_corpus.bel'
 
 module = pystow.module('causal_precedence_training', 'selventa')
 
@@ -31,20 +35,22 @@ bel_fplx = dict(fplx_df.loc[fplx_df['target_ns'] == 'BEL', ['target_id', 'source
 @verbose_option
 @click.option('--force', is_flag=True)
 def main(force: bool):
-    df = get_normalized_dataframe(force=force)
-    click.echo(df.head())
+    for graph_name in 'large_corpus', 'small_corpus':
+        click.secho(f'{graph_name} results:', fg='blue')
+        df = get_normalized_dataframe(graph_name=graph_name, force=force)
+        click.echo(df.head())
 
 
-def get_normalized_dataframe(force: bool = False) -> pd.DataFrame:
-    cache_path = module.join(name='large_corpus_norm.tsv')
-    df = get_dataframe(force=force)
+def get_normalized_dataframe(graph_name: str, force: bool = False) -> pd.DataFrame:
+    df = get_dataframe(graph_name=graph_name, force=force)
 
     for letter in 'abc':
         df[[f'{letter}.prefix', f'{letter}.identifier', f'{letter}.name']] = [
             get_identifier(namespace, name)
             for namespace, name in df[[f'{letter}.prefix', f'{letter}.name']].values
         ]
-    df.to_csv(cache_path, sep='\t', index=False)
+    output_path = os.path.join(HERE, f'selventa_{graph_name}.tsv')
+    df.to_csv(output_path, sep='\t', index=False)
     return df
 
 
@@ -88,12 +94,12 @@ def get_identifier(namespace: str, name: str) -> Union[Tuple[str, None, str], Tu
     return namespace, None, name
 
 
-def get_dataframe(force: bool = False) -> pd.DataFrame:
-    cache_path = module.join(name='large_corpus.tsv')
+def get_dataframe(graph_name: str, force: bool = False) -> pd.DataFrame:
+    cache_path = module.join(name=f'{graph_name}.tsv')
     if cache_path.exists() and not force:
         return pd.read_csv(cache_path, sep='\t')
 
-    graph = get_graph(force=force)
+    graph = get_graph(graph_name=graph_name, force=force)
 
     key_to_edge = {
         k: (u, v, d)
@@ -143,12 +149,13 @@ def get_dataframe(force: bool = False) -> pd.DataFrame:
     return df
 
 
-def get_graph(force: bool = False) -> pybel.BELGraph:
+def get_graph(graph_name: str, force: bool = False) -> pybel.BELGraph:
     """Get the Selventa large corpus as a BEL Graph."""
-    cache_path = module.join(name='large_corpus.bel.pickle')
+    url = f'https://github.com/cthoyt/selventa-knowledge/raw/master/selventa_knowledge/{graph_name}.bel'
+    cache_path = module.join(name=f'{graph_name}.bel.pickle')
     if cache_path.exists() and not force:
         return pybel.load(cache_path)
-    path = module.ensure(url=URL, force=force)
+    path = module.ensure(url=url, force=force)
     graph = pybel.from_bel_script(path, citation_clearing=False)
     pybel.dump(graph, path.as_posix())
     return graph
