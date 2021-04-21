@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-"""Get transitive relations from the Selventa BEL content."""
+"""Get transitive relations from the Selventa BEL content.
+
+Run with ``python -m causal_precedence_training.sources.selventa``.
+"""
 
 import bioregistry
 import click
@@ -16,6 +19,8 @@ import pybel
 import pybel.constants as pc
 import pystow
 from pybel.dsl import BaseConcept
+
+from causal_precedence_training.resources import SELVENTA_LARGE_CORPUS
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +41,6 @@ def main(force: bool):
 
 
 def get_normalized_dataframe(force: bool = False) -> pd.DataFrame:
-    cache_path = module.join(name='large_corpus_norm.tsv')
     df = get_dataframe(force=force)
 
     for letter in 'abc':
@@ -44,7 +48,7 @@ def get_normalized_dataframe(force: bool = False) -> pd.DataFrame:
             get_identifier(namespace, name)
             for namespace, name in df[[f'{letter}.prefix', f'{letter}.name']].values
         ]
-    df.to_csv(cache_path, sep='\t', index=False)
+    df.to_csv(SELVENTA_LARGE_CORPUS, sep='\t', index=False)
     return df
 
 
