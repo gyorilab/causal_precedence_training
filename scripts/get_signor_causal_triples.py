@@ -17,15 +17,18 @@ def get_relevant_signor_statements():
     signor_stmts_by_id : dict
         Dictionary mapping SIGNOR IDs to lists of associated statements
     """
+    print('Collecting SIGNOR statements from the web.')
     sp = signor.process_from_web()
     signor_stmts_by_id = defaultdict(list)
     for stmt in sp.statements:
         if isinstance(stmt, Inhibition) or isinstance(stmt, Activation):
             signor_stmts_by_id[stmt.evidence[0].source_id].append(stmt)
     signor_stmts_by_id = dict(signor_stmts_by_id)
+    return signor_stmts_by_id
 
 
 def generate_signor_triples_dataframe(signor_stmts_by_id):
+    print('Generating dataframe of SIGNOR triples.')
     SIGNOR_pathway_dfs = []
     for pathway_filename in os.listdir(locations.SIGNOR_PATHWAYS_DIRECTORY):
         filepath = os.path.join(locations.SIGNOR_PATHWAYS_DIRECTORY,
@@ -78,7 +81,7 @@ def generate_signor_triples_dataframe(signor_stmts_by_id):
     # Change order of columns
     df = df[['statement1', 'statement2', 'signor_entity1', 'signor_entity2',
              'signor_entity3', 'pathway_filename']]
-
+    print('Expanding bound conditions.')
     # Expand bound conditions into multiple statements
     # Pull out agents A->B->C from chain
     df['A'] = df.statement1.apply(lambda x: x.subj)
@@ -136,6 +139,7 @@ def main():
     triples_df = generate_signor_triples_dataframe(
         get_relevant_signor_statements()
     )
+    print('Writing result to file.')
     triples_df.to_pickle(os.path.join(locations.TRIPLES_DIRECTORY,
                                       'signor_causal_triples.pkl'))
 
