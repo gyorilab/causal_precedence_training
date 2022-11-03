@@ -17,7 +17,26 @@ def download_signor_pathways():
                          f'{locations.S3_DATA_PATH}/SIGNOR_pathways.tar.gz',
                          pathways_tarball_location)
     with tarfile.open(pathways_tarball_location) as tar:
-        tar.extractall(path=locations.LOCAL_DATA_HOME)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar, path=locations.LOCAL_DATA_HOME)
     os.remove(pathways_tarball_location)
     # Change folder name to that listed in
     # causal_precedence_training.locations (defensive programming)
